@@ -1,4 +1,13 @@
-import { Link, useLocation } from "@remix-run/react";
+import { Link, useLocation, Form, json } from "@remix-run/react";
+import type { LoaderFunctionArgs } from "@remix-run/node";
+import { authTokenCookie } from "~/services/authService";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = await authTokenCookie.parse(cookieHeader);
+
+  return json({ hasToken: !!token });
+}
 
 export default function Navigation() {
   const location = useLocation();
@@ -41,25 +50,35 @@ export default function Navigation() {
               </Link>
             </div>
           </div>
-          <Link
-            to="/quotes/new"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="flex items-center space-x-4">
+            <Link
+              to="/quotes/new"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Add New Quote
-          </Link>
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add New Quote
+            </Link>
+            <Form method="post" action="/logout">
+              <button
+                type="submit"
+                className="inline-flex items-center px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Logout
+              </button>
+            </Form>
+          </div>
         </div>
       </div>
     </nav>

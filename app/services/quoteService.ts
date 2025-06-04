@@ -14,8 +14,12 @@ export interface ApiResponse<T> {
 }
 
 export const quoteService = {
-    async getAllQuotes(): Promise<ApiResponse<Quote[]>> {
-        const response = await fetch(`${API_BASE_URL}/quotes`);
+    async getAllQuotes(token?: string): Promise<ApiResponse<Quote[]>> {
+        const response = await fetch(`${API_BASE_URL}/quotes`, {
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+        });
         return response.json();
     },
 
@@ -29,31 +33,36 @@ export const quoteService = {
         return response.json();
     },
 
-    async createQuote(quote: Omit<Quote, 'id'>): Promise<ApiResponse<Quote>> {
+    async createQuote(quote: Omit<Quote, 'id'>, token?: string): Promise<ApiResponse<Quote>> {
         const response = await fetch(`${API_BASE_URL}/quotes`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
             },
             body: JSON.stringify(quote),
         });
         return response.json();
     },
 
-    async updateQuote(id: string, quote: Partial<Quote>): Promise<ApiResponse<Quote>> {
+    async updateQuote(id: string, quote: Partial<Quote>, token?: string): Promise<ApiResponse<Quote>> {
         const response = await fetch(`${API_BASE_URL}/quotes/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
             },
             body: JSON.stringify(quote),
         });
         return response.json();
     },
 
-    async deleteQuote(id: string): Promise<ApiResponse<void>> {
+    async deleteQuote(id: string, token?: string): Promise<ApiResponse<void>> {
         const response = await fetch(`${API_BASE_URL}/quotes/${id}`, {
             method: 'DELETE',
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
         });
         return response.json();
     },

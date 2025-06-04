@@ -6,12 +6,14 @@ interface QuoteListProps {
   quotes: Quote[];
   isDeleting: boolean;
   onDelete: (id: string) => Promise<void>;
+  isEditable: boolean;
 }
 
 export default function QuoteList({
   quotes,
   onDelete,
   isDeleting = false,
+  isEditable = false,
 }: Readonly<QuoteListProps>) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -50,23 +52,25 @@ export default function QuoteList({
                 ))}
               </div>
             </div>
-            <div className="mt-3 flex space-x-2">
-              <Link
-                to={`/quotes/${quote.id}/edit`}
-                className="flex-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 text-center"
-              >
-                Edit
-              </Link>
-              <button
-                onClick={() => handleDelete(quote.id)}
-                disabled={deletingId === quote.id}
-                className="flex-1 px-3 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
-              >
-                {deletingId === quote.id && isDeleting
-                  ? "Deleting..."
-                  : "Delete"}
-              </button>
-            </div>
+            {isEditable && (
+              <div className="mt-3 flex space-x-2">
+                <Link
+                  to={`/quotes/${quote.id}/edit`}
+                  className="flex-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 text-center"
+                >
+                  Edit
+                </Link>
+                <button
+                  onClick={() => handleDelete(quote.id)}
+                  disabled={deletingId === quote.id}
+                  className="flex-1 px-3 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+                >
+                  {deletingId === quote.id && isDeleting
+                    ? "Deleting..."
+                    : "Delete"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ))}
