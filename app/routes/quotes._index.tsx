@@ -1,30 +1,50 @@
 import { useState } from "react";
 import { useLoaderData, useNavigate } from "@remix-run/react";
-import type { ActionFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import QuoteList from "~/components/QuoteList";
 import { quoteService } from "~/services/quoteService";
+import { authTokenCookie } from "~/services/authService";
 
-export async function loader() {
-  const quotes = await quoteService.getAllQuotes();
-  return json({ quotes: quotes.data });
+export async function loader({ request }: LoaderFunctionArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = await authTokenCookie.parse(cookieHeader);
+
+  if (!token) {
+    return redirect("/auth/login");
+  }
+
+  const quotes = await quoteService.getAllQuotes(token);
+  return json({ quotes: quotes.data, hasToken: !!token });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = await authTokenCookie.parse(cookieHeader);
+
   const formData = await request.formData();
   const id = formData.get("id") as string;
   const intent = formData.get("intent") as string;
 
   if (intent === "delete") {
-    await quoteService.deleteQuote(id);
-    return json({ success: true });
+    if (!token) {
+      return json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    try {
+      await quoteService.deleteQuote(id, token);
+      return json({ success: true });
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      return json({ error: err.message ?? "Failed to delete quote" });
+    }
   }
 
   return json({ success: false });
 }
 
 export default function QuotesIndex() {
-  const { quotes } = useLoaderData<typeof loader>();
+  const { quotes, hasToken } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -49,7 +69,7 @@ export default function QuotesIndex() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-6">
       <div className="container mx-auto px-4">
         <header className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">All Quotes</h1>
@@ -72,6 +92,7 @@ export default function QuotesIndex() {
             quotes={quotes}
             onDelete={handleDelete}
             isDeleting={isDeleting}
+            isEditable={hasToken}
           />
         </main>
       </div>

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import QuoteForm from "~/components/QuoteForm";
 import { quoteService } from "~/services/quoteService";
+import { authTokenCookie } from "~/services/authService";
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const quote = await quoteService.getQuoteById(params.id!);
@@ -11,6 +12,13 @@ export async function loader({ params }: LoaderFunctionArgs) {
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = await authTokenCookie.parse(cookieHeader);
+
+  if (!token) {
+    return redirect("/auth/login");
+  }
+
   const formData = await request.formData();
   const text = formData.get("text") as string;
   const author = formData.get("author") as string;
@@ -19,11 +27,15 @@ export async function action({ request, params }: ActionFunctionArgs) {
     .map((tag) => tag.trim())
     .filter(Boolean);
 
-  const quote = await quoteService.updateQuote(params.id!, {
-    text,
-    author,
-    tags,
-  });
+  const quote = await quoteService.updateQuote(
+    params.id!,
+    {
+      text,
+      author,
+      tags,
+    },
+    token
+  );
   return json({ quote: quote.data });
 }
 

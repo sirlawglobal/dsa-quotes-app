@@ -1,11 +1,30 @@
 import { useState } from "react";
 import { useNavigate } from "@remix-run/react";
-import type { ActionFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import QuoteForm from "~/components/QuoteForm";
 import { quoteService } from "~/services/quoteService";
+import { authTokenCookie } from "~/services/authService";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = await authTokenCookie.parse(cookieHeader);
+
+  if (!token) {
+    return redirect("/auth/login");
+  }
+
+  return null;
+}
 
 export async function action({ request }: ActionFunctionArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = await authTokenCookie.parse(cookieHeader);
+
+  if (!token) {
+    return json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const formData = await request.formData();
   const text = formData.get("text") as string;
   const author = formData.get("author") as string;
@@ -14,7 +33,7 @@ export async function action({ request }: ActionFunctionArgs) {
     .map((tag) => tag.trim())
     .filter(Boolean);
 
-  const quote = await quoteService.createQuote({ text, author, tags });
+  const quote = await quoteService.createQuote({ text, author, tags }, token);
   return json({ quote: quote.data });
 }
 
