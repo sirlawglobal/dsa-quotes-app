@@ -70,6 +70,12 @@ export default function Navigation() {
               </svg>
               Add New Quote
             </Link>
+            <Link
+              to="/auth/login"
+              className="inline-flex items-center px-4 py-2 bg-gray-100 text-blue-700 text-sm font-medium rounded-md shadow-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Login
+            </Link>
             <Form method="post" action="/logout">
               <button
                 type="submit"
