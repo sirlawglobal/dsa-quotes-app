@@ -1,4 +1,4 @@
-import { Form, json, useActionData, useNavigation } from "@remix-run/react";
+import { Form, redirect, useActionData, useNavigation } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { authTokenCookie, login as loginUser } from "../services/authService";
 
@@ -12,10 +12,9 @@ export const action: ActionFunction = async ({ request }) => {
     // Add token to cookies
     const token = user.data.token;
     if (token) {
-      return json(
-        { success: true, ...user },
-        { headers: { "Set-Cookie": await authTokenCookie.serialize(token) } }
-      );
+      return redirect("/quotes", {
+        headers: { "Set-Cookie": await authTokenCookie.serialize(token) },
+      });
     }
     return { success: true, ...user };
   } catch (error: unknown) {
