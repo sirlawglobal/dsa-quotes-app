@@ -14,6 +14,7 @@ export interface ApiResponse<T> {
 }
 
 export const quoteService = {
+    
     async getAllQuotes(token?: string): Promise<ApiResponse<Quote[]>> {
         const response = await fetch(`${API_BASE_URL}/quotes`, {
             headers: {
